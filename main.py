@@ -1,9 +1,10 @@
 import os
 from faster_whisper import WhisperModel, decode_audio
-from fastapi import FastAPI, Query, File, UploadFile
+from fastapi import FastAPI, Query, File, UploadFile, Form
 from starlette.responses import StreamingResponse
 import time
 import asyncio
+from typing import Optional
 
 app = FastAPI()
 
@@ -27,19 +28,22 @@ async def transcript(
         print("Transcription took %.2fs" % (time.time() - start_time))
         print("Detected language '%s' with probability %f" % (info.language, info.language_probability))
         for segment in segments:
-            # print("[%.2fs -> %.2fs] %s" % (segment.start, segment.end, segment.text))
+            print("[%.2fs -> %.2fs] %s" % (segment.start, segment.end, segment.text))
             yield segment.text
         # delete audio file
-        os.remove(audio_file_name)
+        try:
+            os.remove(audio_file_name)
+        except:
+            print("Error while deleting file")
     except asyncio.CancelledError:
         print("Cancelled")
         return
 
 @app.post("/transcript")
-async def transcript_endpoint(audio_file_name: str = Query(),
-                              audio_file: UploadFile = File(...)):
+async def transcript_endpoint(audio_file_name: Optional[str] = Form(None),
+                              audio_file: UploadFile = File(None)):
     if audio_file:
-        audio_file_name = time.strftime("%Y%m%d-%H%M%S") + audio_file.filename
+        audio_file_name = "audio/" + time.strftime("%Y%m%d-%H%M%S") + audio_file.filename
         # save audio_file to disk
         with open(audio_file_name, "wb") as buffer:
             buffer.write(audio_file.file.read())
