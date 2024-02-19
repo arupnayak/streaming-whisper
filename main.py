@@ -27,7 +27,7 @@ async def transcript(
         print("Transcription took %.2fs" % (time.time() - start_time))
         print("Detected language '%s' with probability %f" % (info.language, info.language_probability))
         for segment in segments:
-            print("[%.2fs -> %.2fs] %s" % (segment.start, segment.end, segment.text))
+            # print("[%.2fs -> %.2fs] %s" % (segment.start, segment.end, segment.text))
             yield segment.text
         # delete audio file
         os.remove(audio_file_name)
